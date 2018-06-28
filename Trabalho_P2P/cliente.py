@@ -4,6 +4,8 @@ from Config import pares
 import socket
 import threading as thr
 import random
+import servidor
+import os
 
 
 threadsClienteExecutando = 0
@@ -40,7 +42,7 @@ def cliente(portaServidor, diretorioPadrao):
 
             hashEscolhido = listaHashes[opcao]
             servidores =  hashesEncontrados.get(hashEscolhido)
-            requisitarArquivo(servidores, portaServidor, diretorioPadrao, busca)
+            requisitarArquivo(servidores, portaServidor, diretorioPadrao, busca, hashEscolhido)
         else:
             print("-> Nenhum arquivo '{}' foi encontrado!\n".format(busca))
 
@@ -113,14 +115,15 @@ def obterHashesEncontrados():
 '''
 Requisita o arquivo em algum dos hosts da lista. 
 '''
-def requisitarArquivo(hosts, portaServidor, diretorioPadrao,  nomeArquivo):
+def requisitarArquivo(hosts, portaServidor, diretorioPadrao,  nomeArquivo, hashArquivo):
     indice = int(random.random() * len(hosts))
 
     socketCliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     socketCliente.connect((hosts[indice], portaServidor))
     socketCliente.send((nomeArquivo + '/get').encode('utf-8'))
 
-    arquivo = open(diretorioPadrao + nomeArquivo, 'wb')
+    pathArquivo = diretorioPadrao + nomeArquivo
+    arquivo = open(pathArquivo, 'wb')
 
     print("-> Fazendo o download...")
     while True:
@@ -133,9 +136,14 @@ def requisitarArquivo(hosts, portaServidor, diretorioPadrao,  nomeArquivo):
         else:
             break
 
-    print("-> Transferencia concluída!\n")
+
     socketCliente.close()
-    # Fecha o arquivo
     arquivo.close()
 
-
+    hash = str(servidor.geraHash(pathArquivo))
+    if(hash == hashArquivo):	
+    	print("-> Transferencia concluída!")
+    	print("-> O arquivo transferido encontra-se no caminho: \n-> {}\n".format(pathArquivo))
+    else:	
+    	print("-> A transferência falhou! \n-> O hash do arquivo recebido é diferente.\n")
+    	os.remove(pathArquivo)

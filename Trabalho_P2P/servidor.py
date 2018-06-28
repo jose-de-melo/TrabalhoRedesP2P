@@ -101,4 +101,5 @@ def geraHash (caminhoArquivo):
 	hash = hashlib.md5()
 	arquivo = open(caminhoArquivo, 'rb')
 	hash.update(arquivo.read())
+	arquivo.close()
 	return hash.hexdigest()
